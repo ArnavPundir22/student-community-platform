@@ -139,8 +139,10 @@ class WsService {
 
   private async initRedisAdapter(redisHost: string) {
     try {
-      const { createAdapter } = await import('@socket.io/redis-adapter')
-      const { Redis } = await import('ioredis')
+      const redisAdapterModule: any = await (new Function('return import("@socket.io/redis-adapter")')())
+      const ioRedisModule: any = await (new Function('return import("ioredis")')())
+      const createAdapter = redisAdapterModule.createAdapter
+      const Redis = ioRedisModule.Redis || ioRedisModule.default
       const pubClient = new Redis({
         host: redisHost,
         port: env.get('REDIS_PORT') || 6379,
@@ -148,7 +150,7 @@ class WsService {
       })
       const subClient = pubClient.duplicate()
       if (this.io) {
-        this.io.adapter(createAdapter(pubClient, subClient as any))
+        this.io.adapter(createAdapter(pubClient, subClient))
         console.log(`[Socket.io] Redis Adapter connected to ${redisHost}`)
       }
     } catch (err) {
