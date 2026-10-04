@@ -1664,7 +1664,7 @@ code, pre {
 
   /* Chat Composer Input Area on Mobile */
   .chat-composer-area {
-    padding: 8px 10px 10px 10px;
+    padding: 8px 10px calc(64px + env(safe-area-inset-bottom, 0px)) 10px;
     flex-shrink: 0;
     background: var(--bg-darkest);
     z-index: 10;
@@ -1683,7 +1683,7 @@ code, pre {
     align-items: stretch !important;
     text-align: center;
     gap: 12px !important;
-    padding: 12px !important;
+    padding: 12px 12px calc(64px + env(safe-area-inset-bottom, 0px)) 12px !important;
   }
 
   .composer-join-prompt > div {
@@ -1696,13 +1696,14 @@ code, pre {
   .explore-communities-grid {
     grid-template-columns: 1fr !important;
     gap: 14px !important;
+    padding-bottom: 72px !important;
   }
 
   /* 7. Resource Library Page on Mobile */
   .resources-grid {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
-    padding: 12px !important;
+    padding: 12px 12px 72px 12px !important;
   }
 
   .resource-card-modern {

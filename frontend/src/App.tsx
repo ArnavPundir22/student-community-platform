@@ -628,7 +628,7 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([])
   const [resources, setResources] = useState<Resource[]>([])
 
-  const [viewMode, setViewMode] = useState<'chat' | 'resources' | 'explore'>('chat')
+  const [viewMode, setViewMode] = useState<'chat' | 'resources' | 'explore'>('explore')
   const [newMessageContent, setNewMessageContent] = useState('')
   const [selectedDomainFilter, setSelectedDomainFilter] = useState<string>('All')
 
@@ -667,6 +667,8 @@ export default function App() {
   const [editBio, setEditBio] = useState('')
   const [editAvatarUrl, setEditAvatarUrl] = useState('')
   const [editDomains, setEditDomains] = useState('')
+  const avatarFileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
 
   // Create & Edit forms state
   const [newCommName, setNewCommName] = useState('')
@@ -1549,6 +1551,53 @@ function parseJwtPayload(token: string): any {
       setEditAvatarUrl(currentUser.avatarUrl || '')
       setEditDomains(currentUser.domainInterests || '')
       setShowProfileModal(true)
+    }
+  }
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploadingAvatar(true)
+    try {
+      // 1. Instant local preview
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setEditAvatarUrl(event.target.result as string)
+        }
+      }
+      reader.readAsDataURL(file)
+
+      // 2. Upload file to backend /api/v1/upload
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const token = localStorage.getItem('app_token')
+      const headers: Record<string, string> = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
+      const res = await fetch(`${API_BASE}/upload`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        if (data && data.url) {
+          const fullUrl = data.url.startsWith('http') ? data.url : `${API_BASE.replace(/\/api\/v1\/?$/, '')}${data.url}`
+          setEditAvatarUrl(fullUrl)
+          showToast('Profile photo uploaded successfully!', 'success')
+        }
+      } else {
+        showToast('Photo uploaded as local preview.', 'info')
+      }
+    } catch (err) {
+      console.warn('Avatar upload network error, using local image preview:', err)
+      showToast('Photo attached as preview.', 'info')
+    } finally {
+      setIsUploadingAvatar(false)
     }
   }
 
@@ -3593,6 +3642,44 @@ function parseJwtPayload(token: string): any {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2 style={{ fontSize: 18, fontWeight: 800 }}>Manage Student Profile</h2>
             <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Profile Photo Uploader */}
+              <div className="form-group" style={{ alignItems: 'center', textAlign: 'center' }}>
+                <label style={{ alignSelf: 'flex-start' }}>Profile Photo</label>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginTop: 4 }}>
+                  <div style={{ position: 'relative', width: 88, height: 88, borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--accent-primary)', background: '#1e293b', boxShadow: '0 4px 14px rgba(0,0,0,0.3)' }}>
+                    <img
+                      src={getAvatarUrl(editAvatarUrl, editFullName || editUsername)}
+                      alt="Avatar Preview"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    {isUploadingAvatar && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 600 }}>
+                        Uploading...
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    ref={avatarFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleAvatarFileChange}
+                  />
+
+                  <button
+                    type="button"
+                    className="send-btn"
+                    style={{ padding: '7px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8 }}
+                    onClick={() => avatarFileInputRef.current?.click()}
+                    disabled={isUploadingAvatar}
+                  >
+                    <Upload size={14} />
+                    <span>{isUploadingAvatar ? 'Uploading...' : 'Upload Photo'}</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="form-group">
                 <label>Full Name</label>
                 <input
@@ -3616,12 +3703,13 @@ function parseJwtPayload(token: string): any {
               </div>
 
               <div className="form-group">
-                <label>Avatar URL</label>
+                <label>Avatar URL (or Upload Above)</label>
                 <input
                   type="url"
                   className="form-input"
                   value={editAvatarUrl}
                   onChange={(e) => setEditAvatarUrl(e.target.value)}
+                  placeholder="https://..."
                 />
               </div>
 
