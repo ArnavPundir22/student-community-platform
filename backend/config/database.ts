@@ -43,9 +43,9 @@ const dbConfig = defineConfig({
             ssl: { rejectUnauthorized: false },
           }
         : {
-            host: env.get('DB_HOST') || 'db.leowjdfbufhnbgkttxrg.supabase.co',
-            port: env.get('DB_PORT') || 5432,
-            user: env.get('DB_USER') || 'postgres',
+            host: env.get('DB_HOST') || 'aws-0-ap-south-1.pooler.supabase.com',
+            port: env.get('DB_PORT') || 6543,
+            user: env.get('DB_USER') || 'postgres.leowjdfbufhnbgkttxrg',
             password: env.get('DB_PASSWORD') || 'placeholder_password',
             database: env.get('DB_DATABASE') || 'postgres',
             ssl: { rejectUnauthorized: false },
