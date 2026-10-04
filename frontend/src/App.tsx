@@ -87,6 +87,7 @@ interface Message {
 interface Resource {
   id: number
   communityId?: number
+  userId?: number
   title: string
   url: string
   description: string
