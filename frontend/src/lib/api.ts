@@ -46,13 +46,6 @@ export async function apiFetch<T = any>(
       }
     }
 
-    if (res.status === 401) {
-      // Session expired or invalid
-      if (token && endpoint.includes('profile')) {
-        localStorage.removeItem('app_token')
-      }
-    }
-
     if (res.status === 403) {
       const errMsg = (data && data.message) ? data.message : 'Action forbidden: requires Community Owner permissions'
       if (options.onForbidden) {

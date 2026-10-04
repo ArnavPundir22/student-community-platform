@@ -24,10 +24,11 @@ export default class NewAccountController {
     const token = await User.accessTokens.create(user)
     const rawToken = token.value!.release()
 
+    const isSecure = request.isSecure() || process.env.NODE_ENV === 'production'
     response.cookie('auth_token', rawToken, {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: false,
+      sameSite: isSecure ? 'none' : 'lax',
+      secure: isSecure,
       path: '/',
       maxAge: '30d',
     })

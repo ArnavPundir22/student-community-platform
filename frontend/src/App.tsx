@@ -1240,8 +1240,10 @@ function parseJwtPayload(token: string): any {
           }
         }
 
-        // 2. Check existing app_token in localStorage first (Instant local check)
+        // 2. Check existing app_token / cached app_user in localStorage
         const storedToken = localStorage.getItem('app_token')
+        const cachedUserRaw = localStorage.getItem('app_user')
+
         if (storedToken) {
           const res = await apiFetch<any>('/account/profile')
           if (res.ok && res.data) {
@@ -1268,21 +1270,20 @@ function parseJwtPayload(token: string): any {
           console.warn('Supabase session fetch timed out or failed:', e)
         }
 
-        // 4. Fallback check: If app_user exists in localStorage and is valid
-        const cachedUserRaw = localStorage.getItem('app_user')
-        if (cachedUserRaw && storedToken) {
+        // 4. Fallback check: If app_user exists in localStorage, preserve user session
+        if (cachedUserRaw) {
           try {
             const cachedUser = extractUser(JSON.parse(cachedUserRaw))
             if (cachedUser && isSubscribed) {
               setCurrentUser(cachedUser)
-              setAuthToken(storedToken)
+              if (storedToken) setAuthToken(storedToken)
               return
             }
           } catch {}
         }
 
-        // 5. No valid session found
-        if (isSubscribed && !localStorage.getItem('app_token')) {
+        // 5. Only clear session if no cached user AND no stored token exist
+        if (isSubscribed && !cachedUserRaw && !localStorage.getItem('app_token')) {
           updateUserSession(null)
         }
       } catch (err) {
