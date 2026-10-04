@@ -8,6 +8,11 @@
 |
 */
 
+import dns from 'node:dns'
+try {
+  dns.setDefaultResultOrder('ipv4first')
+} catch {}
+
 import router from '@adonisjs/core/services/router'
 import server from '@adonisjs/core/services/server'
 

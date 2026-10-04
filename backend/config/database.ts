@@ -51,7 +51,7 @@ const dbConfig = defineConfig({
             ssl: { rejectUnauthorized: false },
           },
       pool: {
-        min: 2,
+        min: 0,
         max: 20,
         idleTimeoutMillis: 30000,
       },
