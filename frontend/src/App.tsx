@@ -39,7 +39,7 @@ import {
 } from 'lucide-react'
 import { io, Socket } from 'socket.io-client'
 import { supabase } from './lib/supabase'
-import { apiFetch } from './lib/api'
+import { apiFetch, API_BASE } from './lib/api'
 
 interface User {
   id: number
