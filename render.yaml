@@ -6,7 +6,7 @@ services:
   - type: web
     name: student-community-backend
     env: node
-    region: singapore # Change to your preferred region (e.g. oregon, frankfurt)
+    region: singapore
     buildCommand: cd backend && npm install && npm run build
     startCommand: cd backend && node build/bin/server.js
     envVars:
@@ -21,10 +21,7 @@ services:
       - key: APP_KEY
         generateValue: true
       - key: CORS_ORIGIN
-        fromService:
-          type: web
-          name: student-community-frontend
-          property: url
+        sync: false
       - key: DB_CONNECTION
         value: pg
       - key: DB_HOST
@@ -38,22 +35,13 @@ services:
       - key: DB_DATABASE
         value: postgres
 
-  # 2. Frontend Web Service / Static Site (React + Vite)
-  - type: web
+  # 2. Frontend Static Site (React + Vite)
+  - type: static_site
     name: student-community-frontend
-    env: static
-    region: singapore
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: student-community-backend
-          property: url
-          postfix: /api/v1
+        sync: false
       - key: VITE_WS_URL
-        fromService:
-          type: web
-          name: student-community-backend
-          property: url
+        sync: false
