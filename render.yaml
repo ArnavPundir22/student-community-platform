@@ -35,9 +35,10 @@ services:
       - key: DB_DATABASE
         value: postgres
 
-  # 2. Frontend Static Site (React + Vite)
-  - type: static_site
+  # 2. Frontend Static Web Service (React + Vite)
+  - type: web
     name: student-community-frontend
+    env: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
     envVars:
