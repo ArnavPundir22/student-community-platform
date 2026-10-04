@@ -38,7 +38,7 @@ export default class OauthController {
     const token = await User.accessTokens.create(user)
     const rawToken = token.value!.release()
 
-    const isSecure = request.isSecure() || process.env.NODE_ENV === 'production'
+    const isSecure = Boolean(request.secure || process.env.NODE_ENV === 'production')
     response.cookie('auth_token', rawToken, {
       httpOnly: true,
       sameSite: isSecure ? 'none' : 'lax',
