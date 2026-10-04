@@ -1,4 +1,5 @@
 import env from '#start/env'
+import { defineConfig } from '@adonisjs/cors'
 
 const parseCorsOrigin = () => {
   const customOrigin = env.get('CORS_ORIGIN')
