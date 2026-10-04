@@ -16,16 +16,31 @@ const sanitizeDbHost = (host: string | undefined): string => {
   return host
 }
 
+const sanitizeDbUser = (user: string | undefined): string => {
+  const defaultUser = 'postgres.leowjdfbufhnbgkttxrg'
+  if (!user) return defaultUser
+  if (!user.includes('.')) {
+    return `${user}.leowjdfbufhnbgkttxrg`
+  }
+  return user
+}
+
 const sanitizeDbUrl = (url: string | undefined): string | undefined => {
   if (!url) return undefined
-  if (url.includes('db.') && url.includes('.supabase.co')) {
-    let cleanUrl = url.replace(/db\.[a-z0-9]+\.supabase\.co/g, 'aws-0-ap-south-1.pooler.supabase.com')
-    if (cleanUrl.includes(':5432')) {
-      cleanUrl = cleanUrl.replace(':5432', ':6543')
-    }
-    return cleanUrl
+  let cleanUrl = url
+  if (cleanUrl.includes('db.') && cleanUrl.includes('.supabase.co')) {
+    cleanUrl = cleanUrl.replace(/db\.[a-z0-9]+\.supabase\.co/g, 'aws-0-ap-south-1.pooler.supabase.com')
   }
-  return url
+  if (cleanUrl.includes(':5432')) {
+    cleanUrl = cleanUrl.replace(':5432', ':6543')
+  }
+  cleanUrl = cleanUrl.replace(/postgres:\/\/([^:@]+)/, (match, username) => {
+    if (!username.includes('.')) {
+      return 'postgres://' + username + '.leowjdfbufhnbgkttxrg'
+    }
+    return match
+  })
+  return cleanUrl
 }
 
 const dbConfig = defineConfig({
@@ -62,15 +77,15 @@ const dbConfig = defineConfig({
       connection: rawDbUrl
         ? {
             connectionString: sanitizeDbUrl(rawDbUrl),
-            ssl: { rejectUnauthorized: false },
+            ssl: { rejectUnauthorized: false, servername: 'aws-0-ap-south-1.pooler.supabase.com' },
           }
         : {
             host: sanitizeDbHost(rawDbHost),
             port: (rawDbHost && rawDbHost.includes('db.') && rawDbHost.includes('.supabase.co')) ? 6543 : (env.get('DB_PORT') || 6543),
-            user: env.get('DB_USER') || 'postgres.leowjdfbufhnbgkttxrg',
+            user: sanitizeDbUser(env.get('DB_USER')),
             password: env.get('DB_PASSWORD') || 'placeholder_password',
             database: env.get('DB_DATABASE') || 'postgres',
-            ssl: { rejectUnauthorized: false },
+            ssl: { rejectUnauthorized: false, servername: 'aws-0-ap-south-1.pooler.supabase.com' },
           },
       pool: {
         min: 0,
