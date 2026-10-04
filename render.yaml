@@ -1,0 +1,59 @@
+# ==============================================================================
+# Render Blueprint (render.yaml) for Student Community Platform
+# ==============================================================================
+services:
+  # 1. Backend Web Service (AdonisJS v6 API & Socket.io)
+  - type: web
+    name: student-community-backend
+    env: node
+    region: singapore # Change to your preferred region (e.g. oregon, frankfurt)
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && node build/bin/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: LOG_LEVEL
+        value: info
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: APP_KEY
+        generateValue: true
+      - key: CORS_ORIGIN
+        fromService:
+          type: web
+          name: student-community-frontend
+          property: url
+      - key: DB_CONNECTION
+        value: pg
+      - key: DB_HOST
+        value: db.leowjdfbufhnbgkttxrg.supabase.co
+      - key: DB_PORT
+        value: "6543"
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_DATABASE
+        value: postgres
+
+  # 2. Frontend Web Service / Static Site (React + Vite)
+  - type: web
+    name: student-community-frontend
+    env: static
+    region: singapore
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: student-community-backend
+          property: url
+          postfix: /api/v1
+      - key: VITE_WS_URL
+        fromService:
+          type: web
+          name: student-community-backend
+          property: url

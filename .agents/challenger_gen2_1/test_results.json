@@ -1,0 +1,639 @@
+{
+  "timestamp": "2026-09-30T18:38:00Z",
+  "total": 89,
+  "passed": 89,
+  "failed": 0,
+  "warnings": 1,
+  "findings": [
+    {
+      "title": "Channel ID Enumeration & Pre-Auth Information Disclosure in MessagesController",
+      "severity": "Medium",
+      "details": "Unauthenticated request to existing channel (60) returns HTTP 401, while request to non-existent channel (999999) returns HTTP 404 ({\"message\":\"Channel not found\"}). An attacker can enumerate channel IDs without credentials."
+    }
+  ],
+  "results": [
+    {
+      "test": "GET /communities returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "GET /resources returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Zero hardcoded 'alex' or 'demo' users in database",
+      "passed": true,
+      "actual": 0,
+      "expected": 0,
+      "details": "Found: []"
+    },
+    {
+      "test": "Unauth GET /api/v1/auth/me returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"errors\":[{\"message\":\"Unauthorized access\"}]}"
+    },
+    {
+      "test": "Unauth GET /api/v1/auth/profile returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"errors\":[{\"message\":\"Unauthorized access\"}]}"
+    },
+    {
+      "test": "Unauth PUT /api/v1/auth/profile returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"errors\":[{\"message\":\"Unauthorized access\"}]}"
+    },
+    {
+      "test": "Unauth POST /api/v1/auth/logout returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"errors\":[{\"message\":\"Unauthorized access\"}]}"
+    },
+    {
+      "test": "Unauth GET /api/v1/account/profile returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"errors\":[{\"message\":\"Unauthorized access\"}]}"
+    },
+    {
+      "test": "Unauth PUT /api/v1/account/profile returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"errors\":[{\"message\":\"Unauthorized access\"}]}"
+    },
+    {
+      "test": "Unauth POST /api/v1/account/logout returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"errors\":[{\"message\":\"Unauthorized access\"}]}"
+    },
+    {
+      "test": "Unauth POST /api/v1/communities returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required to create a community\"}"
+    },
+    {
+      "test": "Unauth PUT /api/v1/communities/25 returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required\"}"
+    },
+    {
+      "test": "Unauth DELETE /api/v1/communities/25 returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required\"}"
+    },
+    {
+      "test": "Unauth POST /api/v1/communities/25/join returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required\"}"
+    },
+    {
+      "test": "Unauth POST /api/v1/communities/25/leave returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required\"}"
+    },
+    {
+      "test": "Unauth DELETE /api/v1/communities/25/leave returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required\"}"
+    },
+    {
+      "test": "Unauth DELETE /api/v1/communities/25/members/1 returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required\"}"
+    },
+    {
+      "test": "Unauth PUT /api/v1/communities/25/members/1 returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required\"}"
+    },
+    {
+      "test": "Unauth POST /api/v1/communities/25/channels returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required\"}"
+    },
+    {
+      "test": "Unauth DELETE /api/v1/channels/60 returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required\"}"
+    },
+    {
+      "test": "Unauth POST /api/v1/channels/60/messages returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required\"}"
+    },
+    {
+      "test": "Unauth POST /api/v1/resources returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": "Response: {\"message\":\"Authentication required\"}"
+    },
+    {
+      "test": "User A signup returns 201/200",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "details": ""
+    },
+    {
+      "test": "User A ID extracted",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "details": "User ID: 59"
+    },
+    {
+      "test": "Raw Token extracted",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "details": ""
+    },
+    {
+      "test": "Signup emits auth_token cookie",
+      "passed": true,
+      "actual": "auth_token=",
+      "expected": "in str",
+      "details": ""
+    },
+    {
+      "test": "Signup cookie is HttpOnly",
+      "passed": true,
+      "actual": "HttpOnly",
+      "expected": "in str",
+      "details": ""
+    },
+    {
+      "test": "Pure Cookie Auth GET /auth/me returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Cookie Auth returns correct user ID",
+      "passed": true,
+      "actual": 59,
+      "expected": 59,
+      "details": ""
+    },
+    {
+      "test": "Pure Bearer Header Auth GET /auth/me returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Bearer Auth returns correct user ID",
+      "passed": true,
+      "actual": 59,
+      "expected": 59,
+      "details": ""
+    },
+    {
+      "test": "Tampered Cookie GET /auth/me returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": ""
+    },
+    {
+      "test": "Tampered Bearer header GET /auth/me returns 401",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": ""
+    },
+    {
+      "test": "PUT /auth/profile returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Profile update reflected fullName",
+      "passed": true,
+      "actual": "Alice Hardened gnofbs",
+      "expected": "Alice Hardened gnofbs",
+      "details": ""
+    },
+    {
+      "test": "Profile update reflected bio",
+      "passed": true,
+      "actual": "Elite security researcher gnofbs",
+      "expected": "Elite security researcher gnofbs",
+      "details": ""
+    },
+    {
+      "test": "GET /auth/me reflects persisted bio",
+      "passed": true,
+      "actual": "Elite security researcher gnofbs",
+      "expected": "Elite security researcher gnofbs",
+      "details": ""
+    },
+    {
+      "test": "GET /auth/me reflects persisted fullName",
+      "passed": true,
+      "actual": "Alice Hardened gnofbs",
+      "expected": "Alice Hardened gnofbs",
+      "details": ""
+    },
+    {
+      "test": "User B (Member) signup returns 201/200",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "details": ""
+    },
+    {
+      "test": "User B ID extracted",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "details": "User B ID: 60"
+    },
+    {
+      "test": "Owner User A creates community (HTTP 201)",
+      "passed": true,
+      "actual": 201,
+      "expected": 201,
+      "details": ""
+    },
+    {
+      "test": "Community ownerId matches User A",
+      "passed": true,
+      "actual": 59,
+      "expected": 59,
+      "details": ""
+    },
+    {
+      "test": "Auto-created general-discussion channel exists",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "details": ""
+    },
+    {
+      "test": "User B joins community returns 201",
+      "passed": true,
+      "actual": 201,
+      "expected": 201,
+      "details": ""
+    },
+    {
+      "test": "User B role is 'member'",
+      "passed": true,
+      "actual": "member",
+      "expected": "member",
+      "details": ""
+    },
+    {
+      "test": "Member DELETE community returns 403 Forbidden",
+      "passed": true,
+      "actual": 403,
+      "expected": 403,
+      "details": ""
+    },
+    {
+      "test": "Member PUT community profile returns 403 Forbidden",
+      "passed": true,
+      "actual": 403,
+      "expected": 403,
+      "details": ""
+    },
+    {
+      "test": "Member POST channel returns 403 Forbidden",
+      "passed": true,
+      "actual": 403,
+      "expected": 403,
+      "details": ""
+    },
+    {
+      "test": "Member DELETE channel returns 403 Forbidden",
+      "passed": true,
+      "actual": 403,
+      "expected": 403,
+      "details": ""
+    },
+    {
+      "test": "Member PUT member role (privilege escalation) returns 403 Forbidden",
+      "passed": true,
+      "actual": 403,
+      "expected": 403,
+      "details": ""
+    },
+    {
+      "test": "Member DELETE member (kick owner) returns 403 Forbidden",
+      "passed": true,
+      "actual": 403,
+      "expected": 403,
+      "details": ""
+    },
+    {
+      "test": "Member DELETE other member returns 403 Forbidden",
+      "passed": true,
+      "actual": 403,
+      "expected": 403,
+      "details": ""
+    },
+    {
+      "test": "Owner creates channel returns 201",
+      "passed": true,
+      "actual": 201,
+      "expected": 201,
+      "details": ""
+    },
+    {
+      "test": "Owner updates community returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Updated name verified",
+      "passed": true,
+      "actual": "Security Hub Enhanced gnofbs",
+      "expected": "Security Hub Enhanced gnofbs",
+      "details": ""
+    },
+    {
+      "test": "Owner promotes Bob to admin returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Bob's new role is admin",
+      "passed": true,
+      "actual": "admin",
+      "expected": "admin",
+      "details": ""
+    },
+    {
+      "test": "Owner demotes Bob back to member returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Bob's new role is member",
+      "passed": true,
+      "actual": "member",
+      "expected": "member",
+      "details": ""
+    },
+    {
+      "test": "Owner kicks Charlie returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Owner deletes channel returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Owner POST /leave rejected with 400 Bad Request",
+      "passed": true,
+      "actual": 400,
+      "expected": 400,
+      "details": ""
+    },
+    {
+      "test": "Owner DELETE /leave rejected with 400 Bad Request",
+      "passed": true,
+      "actual": 400,
+      "expected": 400,
+      "details": ""
+    },
+    {
+      "test": "Member Bob DELETE /leave returns 200 OK",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Owner deletes community returns 200 OK",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Deleted community GET returns 404",
+      "passed": true,
+      "actual": 404,
+      "expected": 404,
+      "details": ""
+    },
+    {
+      "test": "Invalid URL protocol rejected with 400",
+      "passed": true,
+      "actual": 400,
+      "expected": 400,
+      "details": ""
+    },
+    {
+      "test": "Missing title rejected with 400",
+      "passed": true,
+      "actual": 400,
+      "expected": 400,
+      "details": ""
+    },
+    {
+      "test": "Create resource for tag 'Artificial Intelligence' returns 201",
+      "passed": true,
+      "actual": 201,
+      "expected": 201,
+      "details": ""
+    },
+    {
+      "test": "Create resource for tag 'Web Development' returns 201",
+      "passed": true,
+      "actual": 201,
+      "expected": 201,
+      "details": ""
+    },
+    {
+      "test": "Create resource for tag 'Cybersecurity' returns 201",
+      "passed": true,
+      "actual": 201,
+      "expected": 201,
+      "details": ""
+    },
+    {
+      "test": "GET /resources?domain=Artificial Intelligence returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "All resources filtered by 'Artificial Intelligence' match tag exactly",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "details": "Count: 10"
+    },
+    {
+      "test": "GET /resources?domain=Web Development returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "All resources filtered by 'Web Development' match tag exactly",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "details": "Count: 9"
+    },
+    {
+      "test": "GET /resources?domain=Cybersecurity returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "All resources filtered by 'Cybersecurity' match tag exactly",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "details": "Count: 4"
+    },
+    {
+      "test": "All 25 concurrent upvote requests succeed (200 OK)",
+      "passed": true,
+      "actual": 25,
+      "expected": 25,
+      "details": ""
+    },
+    {
+      "test": "Upvote count increased monotonically",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "details": "Old: 1, New: 26"
+    },
+    {
+      "test": "Atomic increment precision: Exact match (No lost updates)",
+      "passed": true,
+      "actual": 26,
+      "expected": 26,
+      "details": ""
+    },
+    {
+      "test": "POST /auth/logout returns 200 OK",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Logout clears auth_token cookie",
+      "passed": true,
+      "actual": "auth_token=",
+      "expected": "in str",
+      "details": ""
+    },
+    {
+      "test": "Cookie header explicitly expires or clears token",
+      "passed": true,
+      "actual": true,
+      "expected": true,
+      "details": "Header: auth_token=; Max-Age=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax, adonis-session=s%3AeyJtZXNzYWdlIjoiMjI5YWM1MmYtNGM5MC00MjU0LWEzYjQtMjdiZWRiODVhZjYyIiwicHVycG9zZSI6ImFkb25pcy1zZXNzaW9uIn0.ipFd1ukDEguoPwYPBSPvGisiwVMbseGnncqrDCEG8xc; Max-Age=7200; Path=/; HttpOnly; SameSite=Lax"
+    },
+    {
+      "test": "Revoked Bearer token returns 401 Unauthorized",
+      "passed": true,
+      "actual": 401,
+      "expected": 401,
+      "details": ""
+    },
+    {
+      "test": "User B fresh login returns 200",
+      "passed": true,
+      "actual": 200,
+      "expected": 200,
+      "details": ""
+    },
+    {
+      "test": "Owner kicking themselves rejected with 400 Bad Request",
+      "passed": true,
+      "actual": 400,
+      "expected": 400,
+      "details": ""
+    },
+    {
+      "test": "Assigning invalid role rejected with 400 Bad Request",
+      "passed": true,
+      "actual": 400,
+      "expected": 400,
+      "details": ""
+    },
+    {
+      "test": "Creating channel with empty name rejected with 400 Bad Request",
+      "passed": true,
+      "actual": 400,
+      "expected": 400,
+      "details": ""
+    },
+    {
+      "test": "Empty/whitespace message content rejected with 400 Bad Request",
+      "passed": true,
+      "actual": 400,
+      "expected": 400,
+      "details": ""
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+--- a/backend/start/routes.ts
++++ b/backend/start/routes.ts
+@@ -1,9 +1,9 @@
+ import { middleware } from '#start/kernel'
+ import router from '@adonisjs/core/services/router'
+-import CommunitiesController from '#controllers/communities_controller'
+-import ChannelsController from '#controllers/channels_controller'
+-import MessagesController from '#controllers/messages_controller'
+-import ResourcesController from '#controllers/resources_controller'
+-import AccessTokensController from '#controllers/access_tokens_controller'
+-import NewAccountController from '#controllers/new_account_controller'
+-import ProfileController from '#controllers/profile_controller'
++const CommunitiesController = () => import('#controllers/communities_controller')
++const ChannelsController = () => import('#controllers/channels_controller')
++const MessagesController = () => import('#controllers/messages_controller')
++const ResourcesController = () => import('#controllers/resources_controller')
++const AccessTokensController = () => import('#controllers/access_tokens_controller')
++const NewAccountController = () => import('#controllers/new_account_controller')
++const ProfileController = () => import('#controllers/profile_controller')

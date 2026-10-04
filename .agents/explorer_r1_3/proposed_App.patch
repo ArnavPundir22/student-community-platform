@@ -1,0 +1,51 @@
+--- a/frontend/src/App.tsx
++++ b/frontend/src/App.tsx
+@@ -118,6 +118,33 @@ function App() {
++  async function fetchCommunities() {
++    try {
++      const res = await fetch(`${API_BASE}/communities`)
++      if (res.ok) {
++        const data = await res.json()
++        setCommunities(data)
++        if (data.length > 0) {
++          fetchCommunityDetails(data[0].id)
++        }
++      }
++    } catch (err) {
++      console.error('Failed to fetch communities:', err)
++    }
++  }
++
++  async function fetchResources() {
++    try {
++      const res = await fetch(`${API_BASE}/resources`)
++      if (res.ok) {
++        const data = await res.json()
++        setResources(data)
++      }
++    } catch (err) {
++      console.error('Failed to fetch resources:', err)
++    }
++  }
++
+   // 2. Fetch Communities
+   useEffect(() => {
+     fetchCommunities()
+     fetchResources()
+   }, [])
+-
+-  const fetchCommunities = async () => {
+-    try {
+-      const res = await fetch(`${API_BASE}/communities`)
+-      if (res.ok) {
+-        const data = await res.json()
+-        setCommunities(data)
+-        if (data.length > 0) {
+-          fetchCommunityDetails(data[0].id)
+-        }
+-      }
+-    } catch (err) {
+-      console.error('Failed to fetch communities:', err)
+-    }
+-  }
+-
