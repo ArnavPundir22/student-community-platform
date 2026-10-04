@@ -6,6 +6,7 @@ services:
   - type: web
     name: student-community-backend
     env: node
+    plan: free
     region: singapore
     buildCommand: cd backend && npm install && npm run build
     startCommand: cd backend && node build/bin/server.js
@@ -39,6 +40,7 @@ services:
   - type: web
     name: student-community-frontend
     env: static
+    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
     envVars:
