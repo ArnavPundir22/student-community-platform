@@ -17,43 +17,28 @@ export default class UploadsController {
 
     const file = request.file('file', {
       size: '20mb',
-      extnames: [
-        'png',
-        'jpg',
-        'jpeg',
-        'gif',
-        'webp',
-        'svg',
-        'pdf',
-        'doc',
-        'docx',
-        'txt',
-        'zip',
-        'rar',
-        '7z',
-        'csv',
-        'xlsx',
-        'json',
-        'mp3',
-        'wav',
-        'mp4',
-        'webm',
-      ],
     })
 
     if (file) {
       if (file.hasErrors) {
         return response.badRequest({
-          message: file.errors[0]?.message || 'Invalid file format or file size exceeded (max 20MB)',
+          message: file.errors[0]?.message || 'File upload error or file size exceeded (max 20MB)',
         })
       }
 
-      if (!file.tmpPath) {
-        return response.badRequest({ message: 'Failed to read uploaded file stream' })
+      let fileBuffer: Buffer
+      if (file.tmpPath && existsSync(file.tmpPath)) {
+        fileBuffer = await readFile(file.tmpPath)
+      } else {
+        const tempName = `${randomUUID()}.${file.extname || 'bin'}`
+        await file.move(app.makePath('tmp'), { name: tempName })
+        if (!file.filePath || !existsSync(file.filePath)) {
+          return response.badRequest({ message: 'Failed to read uploaded file' })
+        }
+        fileBuffer = await readFile(file.filePath)
       }
 
-      const filename = `${randomUUID()}.${file.extname}`
-      const fileBuffer = await readFile(file.tmpPath)
+      const filename = `${randomUUID()}.${file.extname || 'bin'}`
       const contentType = file.type || file.subtype || 'application/octet-stream'
 
       const uploadResult = await StorageService.uploadFile(filename, fileBuffer, contentType)

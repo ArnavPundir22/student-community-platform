@@ -37,16 +37,20 @@ services:
         sync: false
       - key: DB_DATABASE
         value: postgres
+      - key: SUPABASE_URL
+        value: https://leowjdfbufhnbgkttxrg.supabase.co
+
       - key: SUPABASE_S3_ACCESS_KEY_ID
         value: 7b78423db1803c8ffc27f34b5ede3d4c
       - key: SUPABASE_S3_SECRET_ACCESS_KEY
-        sync: false
+        value: 3d3be75e779e3051143e9960463ada294a6e8ed499c1dd1322ace1d033b92a2f
       - key: SUPABASE_S3_ENDPOINT
         value: https://leowjdfbufhnbgkttxrg.supabase.co/storage/v1/s3
       - key: SUPABASE_S3_REGION
         value: us-east-1
       - key: SUPABASE_STORAGE_BUCKET
         value: uploads
+
 
 
   # 2. Frontend Static Web Service (React + Vite)

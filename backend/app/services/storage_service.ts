@@ -9,18 +9,32 @@ class StorageService {
   private supabaseUrl: string
 
   constructor() {
-    const region = process.env.SUPABASE_S3_REGION || 'us-east-1'
-    const endpoint =
-      process.env.SUPABASE_S3_ENDPOINT || 'https://leowjdfbufhnbgkttxrg.supabase.co/storage/v1/s3'
-    const accessKeyId =
-      process.env.SUPABASE_S3_ACCESS_KEY_ID || '7b78423db1803c8ffc27f34b5ede3d4c'
-    const secretAccessKey =
-      process.env.SUPABASE_S3_SECRET_ACCESS_KEY ||
-      '3d3be75e779e3051143e9960463ada294a6e8ed499c1dd1322ace1d033b92a2f'
+    const rawRegion = process.env.SUPABASE_S3_REGION
+    const rawEndpoint = process.env.SUPABASE_S3_ENDPOINT
+    const rawAccessKey = process.env.SUPABASE_S3_ACCESS_KEY_ID
+    const rawSecretKey = process.env.SUPABASE_S3_SECRET_ACCESS_KEY
+    const rawBucket = process.env.SUPABASE_STORAGE_BUCKET
+    const rawSupabaseUrl = process.env.SUPABASE_URL
 
-    this.bucketName = process.env.SUPABASE_STORAGE_BUCKET || 'uploads'
+    const region = rawRegion && rawRegion.trim() ? rawRegion.trim() : 'us-east-1'
+    const endpoint =
+      rawEndpoint && rawEndpoint.trim()
+        ? rawEndpoint.trim()
+        : 'https://leowjdfbufhnbgkttxrg.supabase.co/storage/v1/s3'
+    const accessKeyId =
+      rawAccessKey && rawAccessKey.trim()
+        ? rawAccessKey.trim()
+        : '7b78423db1803c8ffc27f34b5ede3d4c'
+    const secretAccessKey =
+      rawSecretKey && rawSecretKey.trim()
+        ? rawSecretKey.trim()
+        : '3d3be75e779e3051143e9960463ada294a6e8ed499c1dd1322ace1d033b92a2f'
+
+    this.bucketName = rawBucket && rawBucket.trim() ? rawBucket.trim() : 'uploads'
     this.supabaseUrl = (
-      process.env.SUPABASE_URL || 'https://leowjdfbufhnbgkttxrg.supabase.co'
+      rawSupabaseUrl && rawSupabaseUrl.trim()
+        ? rawSupabaseUrl.trim()
+        : 'https://leowjdfbufhnbgkttxrg.supabase.co'
     ).replace(/\/$/, '')
 
     this.s3Client = new S3Client({
@@ -41,8 +55,8 @@ class StorageService {
           Bucket: this.bucketName,
         })
       )
-    } catch (err: any) {
-      // Ignore if bucket already exists or cannot be created via S3 API (created via dashboard)
+    } catch {
+      // Ignore if bucket already exists or S3 permissions prevent bucket creation
     }
   }
 
@@ -69,8 +83,9 @@ class StorageService {
         size: buffer.length,
       }
     } catch (err) {
-      console.warn('Supabase S3 upload failed, falling back to local file storage:', err)
+      console.error('[StorageService] Supabase S3 upload failed:', err)
 
+      // Local disk fallback
       const uploadDir = app.makePath('public/uploads')
       await mkdir(uploadDir, { recursive: true })
       const filePath = join(uploadDir, filename)
