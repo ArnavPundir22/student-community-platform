@@ -1,8 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import { randomUUID } from 'node:crypto'
-import { mkdir, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { readFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
+import StorageService from '#services/storage_service'
 
 export default class UploadsController {
   async store({ request, response, auth }: HttpContext) {
@@ -14,30 +15,54 @@ export default class UploadsController {
       return response.unauthorized({ message: 'Authentication required' })
     }
 
-    const uploadDir = app.makePath('public/uploads')
-    await mkdir(uploadDir, { recursive: true })
-
     const file = request.file('file', {
       size: '20mb',
       extnames: [
-        'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg',
-        'pdf', 'doc', 'docx', 'txt', 'zip', 'rar', '7z',
-        'csv', 'xlsx', 'json', 'mp3', 'wav', 'mp4', 'webm'
+        'png',
+        'jpg',
+        'jpeg',
+        'gif',
+        'webp',
+        'svg',
+        'pdf',
+        'doc',
+        'docx',
+        'txt',
+        'zip',
+        'rar',
+        '7z',
+        'csv',
+        'xlsx',
+        'json',
+        'mp3',
+        'wav',
+        'mp4',
+        'webm',
       ],
     })
 
     if (file) {
       if (file.hasErrors) {
-        return response.badRequest({ message: file.errors[0]?.message || 'Invalid file format or file size exceeded (max 20MB)' })
+        return response.badRequest({
+          message: file.errors[0]?.message || 'Invalid file format or file size exceeded (max 20MB)',
+        })
       }
+
+      if (!file.tmpPath) {
+        return response.badRequest({ message: 'Failed to read uploaded file stream' })
+      }
+
       const filename = `${randomUUID()}.${file.extname}`
-      await file.move(uploadDir, { name: filename })
-      const url = `/uploads/${filename}`
+      const fileBuffer = await readFile(file.tmpPath)
+      const contentType = file.type || file.subtype || 'application/octet-stream'
+
+      const uploadResult = await StorageService.uploadFile(filename, fileBuffer, contentType)
+
       return response.created({
-        url,
+        url: uploadResult.url,
         name: file.clientName,
-        type: file.type || file.subtype || 'application/octet-stream',
-        size: file.size,
+        type: contentType,
+        size: uploadResult.size,
       })
     }
 
@@ -46,16 +71,17 @@ export default class UploadsController {
     if (name && data) {
       const ext = name.split('.').pop() || 'bin'
       const filename = `${randomUUID()}.${ext}`
-      const filePath = join(uploadDir, filename)
       const base64Data = data.replace(/^data:.*?;base64,/, '')
       const buffer = Buffer.from(base64Data, 'base64')
-      await writeFile(filePath, buffer)
-      const url = `/uploads/${filename}`
+      const contentType = type || 'application/octet-stream'
+
+      const uploadResult = await StorageService.uploadFile(filename, buffer, contentType)
+
       return response.created({
-        url,
+        url: uploadResult.url,
         name,
-        type: type || 'application/octet-stream',
-        size: buffer.length,
+        type: contentType,
+        size: uploadResult.size,
       })
     }
 
@@ -64,7 +90,13 @@ export default class UploadsController {
 
   async show({ params, response }: HttpContext) {
     const fileName = params.fileName
-    const filePath = app.makePath('public/uploads', fileName)
-    return response.download(filePath, false)
+    const localFilePath = app.makePath('public/uploads', fileName)
+
+    if (existsSync(localFilePath)) {
+      return response.download(localFilePath, false)
+    }
+
+    const publicUrl = StorageService.getPublicUrl(fileName)
+    return response.redirect(publicUrl)
   }
 }

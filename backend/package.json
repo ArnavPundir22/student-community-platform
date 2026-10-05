@@ -58,6 +58,7 @@
     "@adonisjs/session": "^8.1.0",
     "@adonisjs/shield": "^9.0.0",
     "@adonisjs/tsconfig": "^2.0.0",
+    "@aws-sdk/client-s3": "^3.1146.0",
     "@japa/api-client": "^3.2.1",
     "@poppinss/ts-exec": "^1.4.4",
     "@socket.io/redis-adapter": "^8.3.0",
