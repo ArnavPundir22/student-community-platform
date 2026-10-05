@@ -12,7 +12,7 @@ const OauthController = () => import('#controllers/oauth_controller')
 const UploadsController = () => import('#controllers/uploads_controller')
 
 router.get('/', () => {
-  return { status: 'online', platform: 'Student Community Network API', version: 'v1' }
+  return { status: 'online', platform: 'Student Community Network API', version: 'v1.2-supabase-s3' }
 })
 
 router.get('/uploads/:fileName', [UploadsController, 'show'])
@@ -21,7 +21,7 @@ router
   .group(() => {
     // Health check endpoint
     router.get('/', () => {
-      return { status: 'online', platform: 'Student Community Network API', version: 'v1' }
+      return { status: 'online', platform: 'Student Community Network API', version: 'v1.2-supabase-s3' }
     })
 
     // Auth Public Routes
