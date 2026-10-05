@@ -27,47 +27,61 @@ export default class UploadsController {
       }
 
       let fileBuffer: Buffer
-      if (file.tmpPath && existsSync(file.tmpPath)) {
-        fileBuffer = await readFile(file.tmpPath)
-      } else {
-        const tempName = `${randomUUID()}.${file.extname || 'bin'}`
-        await file.move(app.makePath('tmp'), { name: tempName })
-        if (!file.filePath || !existsSync(file.filePath)) {
-          return response.badRequest({ message: 'Failed to read uploaded file' })
+      try {
+        if (file.tmpPath && existsSync(file.tmpPath)) {
+          fileBuffer = await readFile(file.tmpPath)
+        } else {
+          const tempName = `${randomUUID()}.${file.extname || 'bin'}`
+          await file.move(app.makePath('tmp'), { name: tempName })
+          if (!file.filePath || !existsSync(file.filePath)) {
+            return response.badRequest({ message: 'Failed to read uploaded file' })
+          }
+          fileBuffer = await readFile(file.filePath)
         }
-        fileBuffer = await readFile(file.filePath)
+
+        const filename = `${randomUUID()}.${file.extname || 'bin'}`
+        const contentType = file.type || file.subtype || 'application/octet-stream'
+
+        const uploadResult = await StorageService.uploadFile(filename, fileBuffer, contentType)
+
+        return response.created({
+          url: uploadResult.url,
+          name: file.clientName,
+          type: contentType,
+          size: uploadResult.size,
+        })
+      } catch (err: any) {
+        console.error('[UploadsController] S3 upload error:', err)
+        return response.internalServerError({
+          message: err.message || 'Failed to upload file to Supabase S3 storage',
+        })
       }
-
-      const filename = `${randomUUID()}.${file.extname || 'bin'}`
-      const contentType = file.type || file.subtype || 'application/octet-stream'
-
-      const uploadResult = await StorageService.uploadFile(filename, fileBuffer, contentType)
-
-      return response.created({
-        url: uploadResult.url,
-        name: file.clientName,
-        type: contentType,
-        size: uploadResult.size,
-      })
     }
 
     // Fallback: Base64 payload
     const { name, type, data } = request.only(['name', 'type', 'data'])
     if (name && data) {
-      const ext = name.split('.').pop() || 'bin'
-      const filename = `${randomUUID()}.${ext}`
-      const base64Data = data.replace(/^data:.*?;base64,/, '')
-      const buffer = Buffer.from(base64Data, 'base64')
-      const contentType = type || 'application/octet-stream'
+      try {
+        const ext = name.split('.').pop() || 'bin'
+        const filename = `${randomUUID()}.${ext}`
+        const base64Data = data.replace(/^data:.*?;base64,/, '')
+        const buffer = Buffer.from(base64Data, 'base64')
+        const contentType = type || 'application/octet-stream'
 
-      const uploadResult = await StorageService.uploadFile(filename, buffer, contentType)
+        const uploadResult = await StorageService.uploadFile(filename, buffer, contentType)
 
-      return response.created({
-        url: uploadResult.url,
-        name,
-        type: contentType,
-        size: uploadResult.size,
-      })
+        return response.created({
+          url: uploadResult.url,
+          name,
+          type: contentType,
+          size: uploadResult.size,
+        })
+      } catch (err: any) {
+        console.error('[UploadsController] Base64 S3 upload error:', err)
+        return response.internalServerError({
+          message: err.message || 'Failed to upload base64 file to Supabase S3 storage',
+        })
+      }
     }
 
     return response.badRequest({ message: 'No file uploaded' })
