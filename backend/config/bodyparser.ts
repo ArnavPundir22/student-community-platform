@@ -71,8 +71,9 @@ const bodyParserConfig = defineConfig({
     /**
      * Content types handled by the multipart parser.
      */
-    types: ['multipart/form-data'],
+    types: ['multipart/form-data', 'multipart/*'],
   },
 })
+
 
 export default bodyParserConfig
