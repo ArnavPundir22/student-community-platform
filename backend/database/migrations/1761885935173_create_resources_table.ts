@@ -14,7 +14,7 @@ export default class extends BaseSchema {
         .onDelete('CASCADE')
       table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
       table.string('title').notNullable()
-      table.string('url').notNullable()
+      table.text('url').notNullable()
       table.text('description').nullable()
       table.string('domain_tag').nullable()
       table.integer('upvotes').defaultTo(0)

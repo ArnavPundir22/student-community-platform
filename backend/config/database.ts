@@ -9,6 +9,23 @@ const defaultConn = (requestedConn === 'pg' && !hasPgAuth) ? 'sqlite' : (request
 const rawDbUrl = env.get('DB_URL')
 const rawDbHost = env.get('DB_HOST')
 
+const getProjectRef = (): string => {
+  const supabaseUrl = env.get('SUPABASE_URL') || ''
+  const dbHost = env.get('DB_HOST') || ''
+  const dbUrl = env.get('DB_URL') || ''
+
+  const matchUrl = supabaseUrl.match(/https:\/\/([a-z0-9]+)\.supabase\.co/)
+  if (matchUrl) return matchUrl[1]
+
+  const matchHost = dbHost.match(/db\.([a-z0-9]+)\.supabase\.co/)
+  if (matchHost) return matchHost[1]
+
+  const matchDbUrl = dbUrl.match(/db\.([a-z0-9]+)\.supabase\.co/)
+  if (matchDbUrl) return matchDbUrl[1]
+
+  return 'leowjdfbufhnbgkttxrg'
+}
+
 const sanitizeDbHost = (host: string | undefined): string => {
   if (!host || (host.includes('db.') && host.includes('.supabase.co'))) {
     return 'aws-0-ap-south-1.pooler.supabase.com'
@@ -17,10 +34,11 @@ const sanitizeDbHost = (host: string | undefined): string => {
 }
 
 const sanitizeDbUser = (user: string | undefined): string => {
-  const defaultUser = 'postgres.leowjdfbufhnbgkttxrg'
+  const projectRef = getProjectRef()
+  const defaultUser = `postgres.${projectRef}`
   if (!user) return defaultUser
   if (!user.includes('.')) {
-    return `${user}.leowjdfbufhnbgkttxrg`
+    return `${user}.${projectRef}`
   }
   return user
 }
@@ -28,15 +46,18 @@ const sanitizeDbUser = (user: string | undefined): string => {
 const sanitizeDbUrl = (url: string | undefined): string | undefined => {
   if (!url) return undefined
   let cleanUrl = url
+  const projectRef = getProjectRef()
+
   if (cleanUrl.includes('db.') && cleanUrl.includes('.supabase.co')) {
     cleanUrl = cleanUrl.replace(/db\.[a-z0-9]+\.supabase\.co/g, 'aws-0-ap-south-1.pooler.supabase.com')
   }
   if (cleanUrl.includes(':5432')) {
     cleanUrl = cleanUrl.replace(':5432', ':6543')
   }
-  cleanUrl = cleanUrl.replace(/postgres:\/\/([^:@]+)/, (match, username) => {
+  cleanUrl = cleanUrl.replace(/postgres(?:ql)?:\/\/([^:@]+)/, (match, username) => {
     if (!username.includes('.')) {
-      return 'postgres://' + username + '.leowjdfbufhnbgkttxrg'
+      const scheme = match.startsWith('postgresql') ? 'postgresql://' : 'postgres://'
+      return scheme + username + '.' + projectRef
     }
     return match
   })
@@ -77,7 +98,7 @@ const dbConfig = defineConfig({
       connection: rawDbUrl
         ? {
             connectionString: sanitizeDbUrl(rawDbUrl),
-            ssl: { rejectUnauthorized: false, servername: 'aws-0-ap-south-1.pooler.supabase.com' },
+            ssl: { rejectUnauthorized: false, servername: `db.${getProjectRef()}.supabase.co` },
           }
         : {
             host: sanitizeDbHost(rawDbHost),
@@ -85,7 +106,7 @@ const dbConfig = defineConfig({
             user: sanitizeDbUser(env.get('DB_USER')),
             password: env.get('DB_PASSWORD') || 'placeholder_password',
             database: env.get('DB_DATABASE') || 'postgres',
-            ssl: { rejectUnauthorized: false, servername: 'aws-0-ap-south-1.pooler.supabase.com' },
+            ssl: { rejectUnauthorized: false, servername: `db.${getProjectRef()}.supabase.co` },
           },
       pool: {
         min: 0,

@@ -39,7 +39,7 @@ import {
 } from 'lucide-react'
 import { io, Socket } from 'socket.io-client'
 import { supabase } from './lib/supabase'
-import { apiFetch, API_BASE } from './lib/api'
+import { apiFetch } from './lib/api'
 
 interface User {
   id: number
@@ -255,6 +255,150 @@ const CommunityCardAvatar = ({ comm, size = 48 }: { comm: Community; size?: numb
     </div>
   )
 }
+
+const isSameUser = (id1?: number | string | null, id2?: number | string | null) => {
+  if (id1 === undefined || id1 === null || id2 === undefined || id2 === null) return false
+  return String(id1) === String(id2)
+}
+
+const CommunityExploreCard = ({
+  comm,
+  currentUser,
+  activeCommunity,
+  communityMembersList,
+  userPendingJoinRequests,
+  fetchCommunityDetails,
+  setViewMode,
+  handleCreateJoinRequest,
+  handleJoinCommunity,
+}: {
+  comm: Community
+  currentUser: User | null
+  activeCommunity: Community | null
+  communityMembersList: any[]
+  userPendingJoinRequests: Record<number, boolean>
+  fetchCommunityDetails: (id: number) => void
+  setViewMode: (mode: any) => void
+  handleCreateJoinRequest: (id: number) => void
+  handleJoinCommunity: (id: number) => void
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  const userIsOwner = Boolean(currentUser && isSameUser(comm.ownerId, currentUser.id))
+  const userIsMember = Boolean(
+    currentUser &&
+      (userIsOwner ||
+        (activeCommunity?.id === comm.id && communityMembersList.some((m) => isSameUser(m.userId || m.user?.id, currentUser.id))) ||
+        comm.members?.some((m: any) => isSameUser(m.userId || m.user?.id, currentUser.id)))
+  )
+
+  const desc = comm.description || 'No description available.'
+  const TRUNCATE_LIMIT = 110
+  const isLong = desc.length > TRUNCATE_LIMIT
+
+  return (
+    <div className="community-card-container">
+      <div className="community-card-header">
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+          <CommunityCardAvatar comm={comm} size={48} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: 0, wordBreak: 'break-word' }}>{comm.name}</h3>
+              {userIsOwner ? (
+                <span
+                  className="domain-badge"
+                  style={{ background: 'rgba(234, 179, 8, 0.15)', color: '#facc15', border: '1px solid rgba(234, 179, 8, 0.3)', padding: '2px 8px', fontSize: 11 }}
+                >
+                  👑 Owner
+                </span>
+              ) : userIsMember ? (
+                <span
+                  className="domain-badge"
+                  style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '2px 8px', fontSize: 11 }}
+                >
+                  ✓ Joined
+                </span>
+              ) : null}
+            </div>
+            <span className="domain-badge" style={{ marginTop: 6, display: 'inline-block' }}>
+              {comm.domainTag}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="community-card-body">
+        <p className="community-card-desc">
+          {isLong && !isExpanded ? `${desc.slice(0, TRUNCATE_LIMIT)}...` : desc}
+          {isLong && (
+            <button
+              type="button"
+              className="more-desc-btn"
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsExpanded(!isExpanded)
+              }}
+            >
+              {isExpanded ? 'Show Less' : 'More...'}
+            </button>
+          )}
+        </p>
+      </div>
+
+      <div className="community-card-footer">
+        {userIsMember ? (
+          <button
+            className="send-btn"
+            style={{ flex: 1, justifyContent: 'center' }}
+            onClick={() => {
+              fetchCommunityDetails(comm.id)
+              setViewMode('chat')
+            }}
+          >
+            Enter Server
+          </button>
+        ) : (
+          <>
+            <button
+              className="upvote-btn"
+              style={{ flex: 1, justifyContent: 'center' }}
+              onClick={() => {
+                fetchCommunityDetails(comm.id)
+                setViewMode('chat')
+              }}
+            >
+              Preview Server
+            </button>
+            {comm.isPrivate ? (
+              userPendingJoinRequests[comm.id] ? (
+                <button className="upvote-btn" style={{ padding: '8px 14px', cursor: 'default', opacity: 0.8 }} disabled>
+                  ⏳ Request Pending
+                </button>
+              ) : (
+                <button
+                  className="send-btn"
+                  style={{ padding: '8px 14px', background: '#8b5cf6', whiteSpace: 'nowrap' }}
+                  onClick={() => handleCreateJoinRequest(comm.id)}
+                >
+                  🔒 Request to Join
+                </button>
+              )
+            ) : (
+              <button
+                className="send-btn"
+                style={{ padding: '8px 14px', whiteSpace: 'nowrap' }}
+                onClick={() => handleJoinCommunity(comm.id)}
+              >
+                Join Server
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 
 const getHostname = (urlStr: string) => {
   try {
@@ -764,12 +908,20 @@ export default function App() {
 
     setIsUploadingCommIcon(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader()
+        r.onload = (evt) => resolve(evt.target?.result as string)
+        r.onerror = (err) => reject(err)
+        r.readAsDataURL(file)
+      })
 
       const res = await apiFetch<any>('/upload', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify({
+          name: file.name,
+          type: file.type || 'image/png',
+          data: dataUrl,
+        }),
       })
 
       if (res.ok && res.data?.url) {
@@ -781,34 +933,18 @@ export default function App() {
         }
         showToast('Community image uploaded successfully!', 'success')
       } else {
-        const reader = new FileReader()
-        reader.onload = (evt) => {
-          const dataUrl = evt.target?.result as string
-          if (dataUrl) {
-            if (targetModal === 'edit') setEditCommIcon(dataUrl)
-            else setNewCommIcon(dataUrl)
-            showToast('Community image loaded locally.', 'info')
-          }
-        }
-        reader.readAsDataURL(file)
+        if (targetModal === 'edit') setEditCommIcon(dataUrl)
+        else setNewCommIcon(dataUrl)
+        showToast('Community image loaded as preview.', 'info')
       }
     } catch (err) {
       console.error('Icon upload error:', err)
-      const reader = new FileReader()
-      reader.onload = (evt) => {
-        const dataUrl = evt.target?.result as string
-        if (dataUrl) {
-          if (targetModal === 'edit') setEditCommIcon(dataUrl)
-          else setNewCommIcon(dataUrl)
-          showToast('Community image loaded locally.', 'info')
-        }
-      }
-      reader.readAsDataURL(file)
     } finally {
       setIsUploadingCommIcon(false)
       if (e.target) e.target.value = ''
     }
   }
+
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -1560,36 +1696,27 @@ function parseJwtPayload(token: string): any {
 
     setIsUploadingAvatar(true)
     try {
-      // 1. Instant local preview
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setEditAvatarUrl(event.target.result as string)
-        }
-      }
-      reader.readAsDataURL(file)
-
-      // 2. Upload file to backend /api/v1/upload
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const token = localStorage.getItem('app_token')
-      const headers: Record<string, string> = {}
-      if (token) headers['Authorization'] = `Bearer ${token}`
-
-      const res = await fetch(`${API_BASE}/upload`, {
-        method: 'POST',
-        headers,
-        body: formData,
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader()
+        r.onload = (event) => resolve(event.target?.result as string)
+        r.onerror = (err) => reject(err)
+        r.readAsDataURL(file)
       })
 
-      if (res.ok) {
-        const data = await res.json()
-        if (data && data.url) {
-          const fullUrl = data.url.startsWith('http') ? data.url : `${API_BASE.replace(/\/api\/v1\/?$/, '')}${data.url}`
-          setEditAvatarUrl(fullUrl)
-          showToast('Profile photo uploaded successfully!', 'success')
-        }
+      setEditAvatarUrl(dataUrl)
+
+      const res = await apiFetch<any>('/upload', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: file.name,
+          type: file.type || 'image/png',
+          data: dataUrl,
+        }),
+      })
+
+      if (res.ok && res.data?.url) {
+        setEditAvatarUrl(res.data.url)
+        showToast('Profile photo uploaded successfully to Supabase!', 'success')
       } else {
         showToast('Photo uploaded as local preview.', 'info')
       }
@@ -1600,6 +1727,7 @@ function parseJwtPayload(token: string): any {
       setIsUploadingAvatar(false)
     }
   }
+
 
   // ROLE-BASED COMMUNITY MANAGEMENT
   const handleDeleteCommunity = async (commId: number) => {
@@ -2004,12 +2132,24 @@ function parseJwtPayload(token: string): any {
       setIsUploadingAttachment(true)
       for (const att of attachedFiles) {
         try {
-          if (att.file) {
-            const formData = new FormData()
-            formData.append('file', att.file)
+          let dataPayload = att.dataUrl
+          if (!dataPayload && att.file) {
+            dataPayload = await new Promise<string>((resolve, reject) => {
+              const r = new FileReader()
+              r.onload = (e) => resolve(e.target?.result as string)
+              r.onerror = (e) => reject(e)
+              r.readAsDataURL(att.file!)
+            })
+          }
+
+          if (dataPayload) {
             const res = await apiFetch<any>('/upload', {
               method: 'POST',
-              body: formData,
+              body: JSON.stringify({
+                name: att.name,
+                type: att.type || 'application/octet-stream',
+                data: dataPayload,
+              }),
             })
             if (res.ok && res.data?.url) {
               uploadedAttachments.push({
@@ -2026,12 +2166,12 @@ function parseJwtPayload(token: string): any {
                 url: att.dataUrl,
               })
             }
-          } else if (att.url || att.dataUrl) {
+          } else if (att.url) {
             uploadedAttachments.push({
               name: att.name,
               type: att.type,
               size: att.size,
-              url: att.url || att.dataUrl!,
+              url: att.url,
             })
           }
         } catch (err) {
@@ -2048,6 +2188,7 @@ function parseJwtPayload(token: string): any {
       }
       setIsUploadingAttachment(false)
     }
+
 
     let contentToSend = newMessageContent.trim()
     if (uploadedAttachments.length > 0) {
@@ -3150,99 +3291,20 @@ function parseJwtPayload(token: string): any {
               </div>
             ) : (
               <div className="explore-communities-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
-                {communities.map((comm) => {
-                  const userIsOwner = Boolean(currentUser && isSameUser(comm.ownerId, currentUser.id))
-                  const userIsMember = Boolean(
-                    currentUser &&
-                      (userIsOwner ||
-                        (activeCommunity?.id === comm.id && communityMembersList.some((m) => isSameUser(m.userId || m.user?.id, currentUser.id))) ||
-                        comm.members?.some(
-                          (m: any) => isSameUser(m.userId || m.user?.id, currentUser.id)
-                        ))
-                  )
-
-                  return (
-                    <div key={comm.id} className="resource-card">
-                      <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <CommunityCardAvatar comm={comm} size={48} />
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{comm.name}</h3>
-                            {userIsOwner ? (
-                              <span
-                                className="domain-badge"
-                                style={{ background: 'rgba(234, 179, 8, 0.15)', color: '#facc15', border: '1px solid rgba(234, 179, 8, 0.3)', padding: '2px 8px', fontSize: 11 }}
-                              >
-                                👑 Owner
-                              </span>
-                            ) : userIsMember ? (
-                              <span
-                                className="domain-badge"
-                                style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '2px 8px', fontSize: 11 }}
-                              >
-                                ✓ Joined
-                              </span>
-                            ) : null}
-                          </div>
-                          <span className="domain-badge" style={{ marginTop: 4, display: 'inline-block' }}>
-                            {comm.domainTag}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="resource-desc" style={{ marginTop: 12 }}>{comm.description}</p>
-                      <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                        {userIsMember ? (
-                          <button
-                            className="send-btn"
-                            style={{ flex: 1, justifyContent: 'center' }}
-                            onClick={() => {
-                              fetchCommunityDetails(comm.id)
-                              setViewMode('chat')
-                            }}
-                          >
-                            Enter Server
-                          </button>
-                        ) : (
-                          <>
-                            <button
-                              className="upvote-btn"
-                              style={{ flex: 1, justifyContent: 'center' }}
-                              onClick={() => {
-                                fetchCommunityDetails(comm.id)
-                                setViewMode('chat')
-                              }}
-                            >
-                              Preview Server
-                            </button>
-                            {comm.isPrivate ? (
-                              userPendingJoinRequests[comm.id] ? (
-                                <button className="upvote-btn" style={{ padding: '8px 14px', cursor: 'default', opacity: 0.8 }} disabled>
-                                  ⏳ Request Pending
-                                </button>
-                              ) : (
-                                <button
-                                  className="send-btn"
-                                  style={{ padding: '8px 14px', background: '#8b5cf6', whiteSpace: 'nowrap' }}
-                                  onClick={() => handleCreateJoinRequest(comm.id)}
-                                >
-                                  🔒 Request to Join
-                                </button>
-                              )
-                            ) : (
-                              <button
-                                className="send-btn"
-                                style={{ padding: '8px 14px', whiteSpace: 'nowrap' }}
-                                onClick={() => handleJoinCommunity(comm.id)}
-                              >
-                                Join Server
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                {communities.map((comm) => (
+                  <CommunityExploreCard
+                    key={comm.id}
+                    comm={comm}
+                    currentUser={currentUser}
+                    activeCommunity={activeCommunity}
+                    communityMembersList={communityMembersList}
+                    userPendingJoinRequests={userPendingJoinRequests}
+                    fetchCommunityDetails={fetchCommunityDetails}
+                    setViewMode={setViewMode}
+                    handleCreateJoinRequest={handleCreateJoinRequest}
+                    handleJoinCommunity={handleJoinCommunity}
+                  />
+                ))}
               </div>
             )}
           </div>

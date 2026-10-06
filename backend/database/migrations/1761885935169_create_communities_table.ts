@@ -10,7 +10,7 @@ export default class extends BaseSchema {
       table.string('slug').notNullable().unique()
       table.text('description').nullable()
       table.string('domain_tag').notNullable()
-      table.string('icon_url').nullable()
+      table.text('icon_url').nullable()
       table.integer('owner_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
 
       table.timestamp('created_at').notNullable()
